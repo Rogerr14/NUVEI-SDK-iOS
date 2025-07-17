@@ -28,26 +28,31 @@ class GlobalHelper{
         }.joined()
     }
     
-    static func validateExpDate(_ expDate: String) -> Bool {
-        let today = Date()
-        let calendar = NSCalendar.current
-        let components = calendar.dateComponents([.month, .year], from: today)
-        let todayMonth = components.month!
-        let todayYear = components.year! - 2000
-        let valExp = expDate.components(separatedBy: "/")
+    public static func validateExpDate(_ expDate: String) -> Bool {
+            let today = Date()
+            let calendar = Calendar.current
+            let components = calendar.dateComponents([.month, .year], from: today)
+            guard let currentMonth = components.month,
+                  let currentYear = components.year else {
+                return false
+            }
 
-        if valExp.count > 1 {
-            let expYear = Int(valExp[1])!
-            let expMonth = Int(valExp[0])!
-            if expYear > todayYear {
+            let parts = expDate.components(separatedBy: "/")
+            guard parts.count == 2,
+                  let expMonth = Int(parts[0]),
+                  let expYear = Int(parts[1]) else {
+                return false
+            }
+
+            let adjustedYear = expYear + 2000 // Asumiendo formato YY
+
+            if adjustedYear > currentYear {
                 return true
-            } else if expYear == todayYear && expMonth > todayMonth && expMonth <= 12 {
+            } else if adjustedYear == currentYear && expMonth >= currentMonth && expMonth <= 12 {
                 return true
             }
+            return false
         }
-
-        return false
-    }
     
     
     
@@ -91,21 +96,22 @@ class GlobalHelper{
     
     
     public func getCardTypeAsset(cardType: PaymentCardType) -> UIImage? {
-        let bundle = Bundle(for: CardModel.self)
-        if cardType == PaymentCardType.amex {
-            return UIImage(named: "stp_card_amex", in: bundle, compatibleWith: nil)
-        } else if cardType == PaymentCardType.masterCard {
-            return UIImage(named: "stp_card_mastercard", in: bundle, compatibleWith: nil)
-        } else if cardType == PaymentCardType.visa {
-            return UIImage(named: "stp_card_visa", in: bundle, compatibleWith: nil)
-        } else if cardType == PaymentCardType.diners {
-            return UIImage(named: "stp_card_diners", in: bundle, compatibleWith: nil)
-        } else if cardType == PaymentCardType.discover {
-            return UIImage(named: "stp_card_discover", in: bundle, compatibleWith: nil)
-        } else if cardType == PaymentCardType.jcb {
-            return UIImage(named: "stp_card_jcb", in: bundle, compatibleWith: nil)
-        } else {
-            return UIImage(named: "stp_card_unknown", in: bundle, compatibleWith: nil)
+            switch cardType {
+            case .amex:
+                return UIImage(named: "stp_card_amex")
+            case .masterCard:
+                return UIImage(named: "stp_card_mastercard")
+            case .visa:
+                return UIImage(named: "stp_card_visa")
+            case .diners:
+                return UIImage(named: "stp_card_diners")
+            case .discover:
+                return UIImage(named: "stp_card_discover")
+            case .jcb:
+                return UIImage(named: "stp_card_jcb")
+            default:
+                return UIImage(named: "stp_card_unknown")
+            }
         }
-    }
+
 }

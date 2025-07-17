@@ -132,7 +132,7 @@ extension CardScanner: VNDocumentCameraViewControllerDelegate {
         return CardModel.createCard(
             cardHolderName: cardHolder,
             cardNumber: cardNumber,
-            expityMonth: expiryMonth ?? 12,
+            expiryMonth: expiryMonth ?? 12,
             expiryYear: expiryYear ?? Calendar.current.component(.year, from: Date()),
             cvc: cvc
         )

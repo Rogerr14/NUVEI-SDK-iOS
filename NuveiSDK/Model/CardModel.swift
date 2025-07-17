@@ -34,107 +34,170 @@ let REGEX_DISCOVER = "^65[4-9][0-9]{13}|64[4-9][0-9]{13}|6011[0-9]{12}|(622(?:12
 let REGEX_JCB = "^(?:2131|1800|35[0-9]{3})[0-9]{11}$"
 
 
-open class CardModel: NSObject{
-    open var status: String?
-    open var transactionId: String?
-    open var token: String?
-    open var cardHolderName: String?
-    open var fiscalNumber: String?
-    open var termination: String?
-    open var isDefault: Bool = false
-    open  var expiryMonth: String?
-    open var expiryYear: String?
-    open var bin: String?
-    open var nip: String?
-    open var msg: String?
-    open var cardType: PaymentCardType = .notSupported
-    internal var cardNumber: String?{
-        didSet{
-            if cardNumber != nil{
+
+@available(iOS 15.0, *)
+public struct CardModel: Codable {
+    public var status: String?
+    public var transactionId: String?
+    public var token: String?
+    public var cardHolderName: String?
+    public var fiscalNumber: String?
+    public var termination: String?
+    public var isDefault: Bool
+    public var expiryMonth: String?
+    public var expiryYear: String?
+    public var bin: String?
+    public var nip: String?
+    public var msg: String?
+    public var cardType: PaymentCardType
+    private var cardNumber: String? {
+        didSet {
+            if cardNumber != nil {
                 self.termination = String(self.cardNumber!.suffix(4))
             }
         }
     }
-    internal var cvc: String?
-    open var type: String?{
-        didSet{
-            if self.type == "vi" {
-                self.cardType = .visa
-            }
-            if self.type == "ax" {
-                self.cardType = .amex
-            }
-            if self.type == "mc" {
-                self.cardType = .masterCard
-            }
-            if self.type == "di" {
-                self.cardType = .diners
-            }
-            if self.type == "al" {
-                self.cardType = .alkosto
-            }
-            if self.type == "ex" {
-                self.cardType = .exito
+    private var cvc: String?
+    public var type: String? {
+        didSet {
+            guard let type = type else { return }
+            switch type.lowercased() {
+            case "vi": self.cardType = .visa
+            case "ax": self.cardType = .amex
+            case "mc": self.cardType = .masterCard
+            case "di": self.cardType = .diners
+            case "al": self.cardType = .alkosto
+            case "ex": self.cardType = .exito
+            default: self.cardType = .notSupported
             }
         }
     }
     
-    //create a card object
-    public static func createCard(cardHolderName: String, cardNumber: String, expityMonth: NSInteger, expiryYear: NSInteger, cvc:String)->CardModel? {
-        let cardModel = CardModel()
-        let today =  Date()
-        let calendar = NSCalendar.current
+    public enum PaymentCardType: String, Codable {
+        case visa = "vi"
+        case masterCard = "mc"
+        case amex = "ax"
+        case diners = "di"
+        case discover = "dc"
+        case jcb = "jb"
+        case elo = "el"
+        case credisensa = "cs"
+        case solidario = "so"
+        case exito = "ex"
+        case alkosto = "ak"
+        case notSupported = ""
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case status
+        case transactionId = "transaction_reference"
+        case token
+        case cardHolderName = "holder_name"
+        case fiscalNumber
+        case termination = "number"
+        case isDefault
+        case expiryMonth = "expiry_month"
+        case expiryYear = "expiry_year"
+        case bin
+        case nip
+        case msg = "message"
+        case type
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        status = try container.decodeIfPresent(String.self, forKey: .status)
+        transactionId = try container.decodeIfPresent(String.self, forKey: .transactionId)
+        token = try container.decodeIfPresent(String.self, forKey: .token)
+        cardHolderName = try container.decodeIfPresent(String.self, forKey: .cardHolderName)
+        fiscalNumber = try container.decodeIfPresent(String.self, forKey: .fiscalNumber)
+        termination = try container.decodeIfPresent(String.self, forKey: .termination)
+        isDefault = try container.decodeIfPresent(Bool.self, forKey: .isDefault) ?? false
+        expiryMonth = try container.decodeIfPresent(String.self, forKey: .expiryMonth)
+        expiryYear = try container.decodeIfPresent(String.self, forKey: .expiryYear)
+        bin = try container.decodeIfPresent(String.self, forKey: .bin)
+        nip = try container.decodeIfPresent(String.self, forKey: .nip)
+        msg = try container.decodeIfPresent(String.self, forKey: .msg)
+        type = try container.decodeIfPresent(String.self, forKey: .type)
+        cardType = PaymentCardType(rawValue: type ?? "") ?? .notSupported
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(status, forKey: .status)
+        try container.encodeIfPresent(transactionId, forKey: .transactionId)
+        try container.encodeIfPresent(token, forKey: .token)
+        try container.encodeIfPresent(cardHolderName, forKey: .cardHolderName)
+        try container.encodeIfPresent(fiscalNumber, forKey: .fiscalNumber)
+        try container.encodeIfPresent(termination, forKey: .termination)
+        try container.encode(isDefault, forKey: .isDefault)
+        try container.encodeIfPresent(expiryMonth, forKey: .expiryMonth)
+        try container.encodeIfPresent(expiryYear, forKey: .expiryYear)
+        try container.encodeIfPresent(bin, forKey: .bin)
+        try container.encodeIfPresent(nip, forKey: .nip)
+        try container.encodeIfPresent(msg, forKey: .msg)
+        try container.encodeIfPresent(type, forKey: .type)
+    }
+    
+    public init(status: String? = nil,
+                transactionId: String? = nil,
+                token: String? = nil,
+                cardHolderName: String? = nil,
+                fiscalNumber: String? = nil,
+                termination: String? = nil,
+                isDefault: Bool = false,
+                expiryMonth: String? = nil,
+                expiryYear: String? = nil,
+                bin: String? = nil,
+                nip: String? = nil,
+                msg: String? = nil,
+                cardType: PaymentCardType = .notSupported,
+                cardNumber: String? = nil,
+                cvc: String? = nil) {
+        self.status = status
+        self.transactionId = transactionId
+        self.token = token
+        self.cardHolderName = cardHolderName
+        self.fiscalNumber = fiscalNumber
+        self.termination = termination
+        self.isDefault = isDefault
+        self.expiryMonth = expiryMonth
+        self.expiryYear = expiryYear
+        self.bin = bin
+        self.nip = nip
+        self.msg = msg
+        self.cardType = cardType
+        self.cardNumber = cardNumber
+        self.cvc = cvc
+    }
+    
+    public static func createCard(cardHolderName: String, cardNumber: String, expiryMonth: NSInteger, expiryYear: NSInteger, cvc: String) -> CardModel? {
+        let today = Date()
+        let calendar = Calendar.current
         let components = calendar.dateComponents([.month, .year], from: today)
         let todayMonth = components.month!
         let todayYear = components.year!
         
-        if GlobalHelper.getTypeCard(cardNumber) == .notSupported{
+        guard GlobalHelper.getTypeCard(cardNumber) != .notSupported else {
             return nil
         }
         
-        if expiryYear < todayYear{
+        if expiryYear < todayYear {
             return nil
         }
         
-        if expityMonth <= todayMonth && expiryYear == todayYear{
+        if expiryMonth <= todayMonth && expiryYear == todayYear {
             return nil
         }
         
-        cardModel.cardNumber = cardNumber
-        cardModel.cardHolderName = cardHolderName
-        cardModel.expiryMonth = "\(expityMonth)"
-        cardModel.expiryYear = "\(expiryYear)"
-        cardModel.cvc = cvc
-        return cardModel
+        return CardModel(
+            cardHolderName: cardHolderName,
+            expiryMonth: "\(expiryMonth)",
+            expiryYear: "\(expiryYear)",
+            cardNumber: cardNumber,
+            cvc: cvc
+        )
     }
-    
-    public func getJSONString()-> String?{
-        var json: Any? = nil
-        do{
-            json = try JSONSerialization.data(withJSONObject: self.getDict(), options: .prettyPrinted)
-        } catch {}
-            if json != nil {
-                let jsonText = String(data: json as! Data, encoding: String.Encoding.ascii)
-                return jsonText
-            }
-            return nil
-        
-    }
-    
-    public func getDict() -> NSDictionary {
-        let dict = [
-            "bin": self.bin,
-            "status": self.status,
-            "token": self.token,
-            "expiry_year": self.expiryYear,
-            "expiry_month": self.expiryMonth,
-            "transaction_reference": self.transactionId,
-            "holder_name": self.cardHolderName,
-            "type": self.type,
-            "number": self.termination,
-            "message": ""
-        ]
-        return dict as NSDictionary
-    }
-    
 }
+
+
