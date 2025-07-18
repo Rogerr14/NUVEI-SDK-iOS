@@ -44,4 +44,54 @@ public final class NuveiSdk {
         
         return response
     }
+    
+    
+    public static func deleteCard(uid: String, tokenCard : String)async throws -> String {
+        
+        guard !uid.isEmpty, !tokenCard.isEmpty else{
+            throw GeneralErrorModel(code: 400, description: "Empty parameters", help: nil, type: "sdk_not_initialized")
+        }
+        guard let interceptor = shared.interceptoHttp else {
+            throw GeneralErrorModel(code: 400, description: "SDK no inicializado. Llame a initEnvironment primero.", help: nil, type: "sdk_not_initialized")
+        }
+        let token = GlobalHelper.generateAuthToken(key: shared.serverKey, code: shared.serverCode)
+        
+        let response = try await interceptor.makeRequest(
+            endpoint: "v2/card/delete/",
+            method: "POST",
+            body: ["card":["token": tokenCard], "user": ["id": uid]],
+            token: token
+        ) as String
+        
+        return response
+        
+    }
+    
+    
+    
+    
+    
+    public static func addCard(cardModel: CardModel, uid: String, email: String) async throws -> CardModel{
+        
+       
+        
+        guard let interceptor = shared.interceptoHttp else {
+            throw GeneralErrorModel(code: 400, description: "SDK no inicializado. Llame a initEnvironment primero.", help: nil, type: "sdk_not_initialized")
+        }
+        let token = GlobalHelper.generateAuthToken(key: shared.serverKey, code: shared.serverCode)
+        
+        let response = try await interceptor.makeRequest(
+            endpoint: "v2/card/delete/",
+            method: "POST",
+            body: [ "user": [
+                                "id": uid,
+                                "email": email
+                            ],
+                   "card":cardModel
+                  ],
+            token: token
+        ) as CardModel
+        
+        return response
+    }
 }
