@@ -6,26 +6,38 @@
 //
 
 import Foundation
-import CryptoKit
-import UIKit
+import CommonCrypto
+import SwiftUI
+
 
 class GlobalHelper{
     static func generateAuthToken(key:String, code: String) ->String {
         let timestamp = String(Int(Date().timeIntervalSince1970))
         let uniqueToken = generateUniqueToken(key: key, timestamp: timestamp)
         let authToken = "\(code);\(timestamp);\(uniqueToken)"
-        let base64Token = Data(authToken.utf8).base64EncodedString(options: .lineLength64Characters)
+        let base64Token = Data(authToken.utf8).base64EncodedString()
         return base64Token.trimmingCharacters(in: .whitespacesAndNewlines)
         
     }
     
     private static func generateUniqueToken(key :String, timestamp:String)->String{
-        let data = "\(timestamp)\(key)".data(using: .utf8)!
-        let keyvalue = SymmetricKey(data: key.data(using: .utf8)!)
-        let hmac = HMAC<SHA256>.authenticationCode(for: data, using: keyvalue)
-        return Data(hmac).map{
-            String(format: "%02hhx", $0)
-        }.joined()
+        // Crear la cadena para el hash: "key" + "timestamp"
+                let input = key + timestamp
+                guard let inputData = input.data(using: .utf8) else {
+                    print("Error: No se pudo convertir la entrada a datos UTF-8")
+                    return ""
+                }
+                
+                // Generar hash SHA-256
+                var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+                inputData.withUnsafeBytes { buffer in
+                    _ = CC_SHA256(buffer.baseAddress, CC_LONG(buffer.count), &digest)
+                }
+                
+                // Convertir a representación hexadecimal
+                let hexString = digest.map { String(format: "%02hhx", $0) }.joined()
+                print("UNIQ-TOKEN (SHA-256): '\(hexString)'")
+                return hexString
     }
     
     public static func validateExpDate(_ expDate: String) -> Bool {
@@ -95,22 +107,22 @@ class GlobalHelper{
     }
     
     
-    public func getCardTypeAsset(cardType: PaymentCardType) -> UIImage? {
+    public static func  getCardTypeAsset(cardType: PaymentCardType) -> String {
             switch cardType {
             case .amex:
-                return UIImage(named: "stp_card_amex")
+                return "stp_card_amex"
             case .masterCard:
-                return UIImage(named: "stp_card_mastercard")
+                return "stp_card_mastercard"
             case .visa:
-                return UIImage(named: "stp_card_visa")
+                return "stp_card_visa"
             case .diners:
-                return UIImage(named: "stp_card_diners")
+                return  "stp_card_diners"
             case .discover:
-                return UIImage(named: "stp_card_discover")
+                return "stp_card_discover"
             case .jcb:
-                return UIImage(named: "stp_card_jcb")
+                return "stp_card_jcb"
             default:
-                return UIImage(named: "stp_card_unknown")
+                return "stp_card_unknown"
             }
         }
 

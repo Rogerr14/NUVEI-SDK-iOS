@@ -23,47 +23,61 @@ public final class NuveiSdk {
         shared.serverCode = serverCode
         shared.serverKey = serverKey
         shared.interceptoHttp = InterceptorHttp(testMode: testMode)
+        print("Environments ok: environments ok")
     }
     
     public static func listCardAvaliables(uid: String) async throws -> [CardModel] {
         guard !uid.isEmpty else {
-            throw GeneralErrorModel.invalidInput
+            print("prueba de guard")
+            throw GeneralErrorModel(error: GeneralErrorModel.APIError(type: "Invalid input", help: "", description: "Empty UID"))
         }
         
         guard let interceptor = shared.interceptoHttp else {
-            throw GeneralErrorModel(code: 400, description: "SDK no inicializado. Llame a initEnvironment primero.", help: nil, type: "sdk_not_initialized")
+            print("fallo")
+            throw GeneralErrorModel(error: GeneralErrorModel.APIError(type: "Invalid configuration", help: "", description: "Request http not valid"))
         }
-        
+        print("Entra hasta antes del token")
         let token = GlobalHelper.generateAuthToken(key: shared.serverKey, code: shared.serverCode)
-        let response = try await interceptor.makeRequest(
-            endpoint: "v2/card/list",
-            method: "GET",
-            parameters: ["uid": uid],
-            token: token
-        ) as [CardModel]
+        print(token)
         
-        return response
+            let response = try await interceptor.makeRequest(
+                endpoint: "v2/card/list",
+                method: "GET",
+                parameters: ["uid": uid],
+                token: token,
+                responseType: CardListContainer.self
+            )
+            print("cantidad: \(response)")
+        return response.cards
+       
+       
     }
     
     
     public static func deleteCard(uid: String, tokenCard : String)async throws -> String {
         
         guard !uid.isEmpty, !tokenCard.isEmpty else{
-            throw GeneralErrorModel(code: 400, description: "Empty parameters", help: nil, type: "sdk_not_initialized")
+            throw GeneralErrorModel.APIError(type: "Invalid input", help: "", description: "Empty data")
         }
         guard let interceptor = shared.interceptoHttp else {
-            throw GeneralErrorModel(code: 400, description: "SDK no inicializado. Llame a initEnvironment primero.", help: nil, type: "sdk_not_initialized")
+            throw GeneralErrorModel.APIError(type: "Invalid configuration", help: "", description: "Request http not valid")
         }
         let token = GlobalHelper.generateAuthToken(key: shared.serverKey, code: shared.serverCode)
+        let bodyDict: [String: Any] = [
+                   "card": ["token": tokenCard],
+                   "user": ["id": uid]
+               ]
+               let bodyData = try JSONSerialization.data(withJSONObject: bodyDict)
         
         let response = try await interceptor.makeRequest(
             endpoint: "v2/card/delete/",
             method: "POST",
-            body: ["card":["token": tokenCard], "user": ["id": uid]],
-            token: token
-        ) as String
+            body: bodyData,
+            token: token,
+            responseType: MessageResponse.self
+        )
         
-        return response
+        return response.message
         
     }
     
@@ -76,22 +90,35 @@ public final class NuveiSdk {
        
         
         guard let interceptor = shared.interceptoHttp else {
-            throw GeneralErrorModel(code: 400, description: "SDK no inicializado. Llame a initEnvironment primero.", help: nil, type: "sdk_not_initialized")
+            throw GeneralErrorModel.APIError(type: "Invalid configuration", help: "", description: "Request http not valid")
         }
         let token = GlobalHelper.generateAuthToken(key: shared.serverKey, code: shared.serverCode)
+        
+        
+        let userDict: [String: String] = [
+                  "id": uid,
+                  "email": email
+              ]
+
+              // Codificar el modelo cardModel a diccionario JSON
+              let cardData = try JSONEncoder().encode(cardModel)
+              let cardJson = try JSONSerialization.jsonObject(with: cardData) as? [String: Any] ?? [:]
+
+              let bodyDict: [String: Any] = [
+                  "user": userDict,
+                  "card": cardJson
+              ]
+              let bodyData = try JSONSerialization.data(withJSONObject: bodyDict)
+
         
         let response = try await interceptor.makeRequest(
             endpoint: "v2/card/delete/",
             method: "POST",
-            body: [ "user": [
-                                "id": uid,
-                                "email": email
-                            ],
-                   "card":cardModel
-                  ],
-            token: token
-        ) as CardModel
+            body: bodyData,
+            token: token,
+            responseType: CardContainer.self
+        )
         
-        return response
+        return response.card
     }
 }
