@@ -231,7 +231,7 @@ public enum PaymentCardType: String, Codable {
 }
 
 @available(iOS 15.0, *)
-public struct CardModel: Codable, Identifiable {
+public class CardModel: Codable, Identifiable {
     public let id: String
     public let status: String?
     public let transactionId: String?
@@ -280,7 +280,7 @@ public struct CardModel: Codable, Identifiable {
         case cardNumber = "number"
     }
     
-    public init(from decoder: Decoder) throws {
+    required public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.status = try container.decodeIfPresent(String.self, forKey: .status)
         self.transactionId = try container.decodeIfPresent(String.self, forKey: .transactionId)

@@ -22,7 +22,6 @@ struct ProductView:View {
                 NavigationLink(destination: ListCardView()){
                     HStack{
                         Image(uiImage: UIImage(named: "cc_Amex", in: Bundle(for: NuveiSdk.self), with: nil) ?? UIImage())
-                            .padding(10)
                         VStack(alignment: .leading){
                             Text((cardSelected != nil ? cardSelected?.cardNumber  :"Agregar Tarjeta") ?? "Agregar Tarjetas")
                             Text((cardSelected != nil ? cardSelected?.cardHolderName  :"Debe agregar una tarjeta para continuar") ?? "Debe agregar una tarjeta para continuar")

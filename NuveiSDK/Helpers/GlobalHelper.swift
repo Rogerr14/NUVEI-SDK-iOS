@@ -69,9 +69,9 @@ class GlobalHelper{
     
     
     public static func getTypeCard(_ cardNumber: String) -> PaymentCardType {
-        if cardNumber.count < 15  || cardNumber.count > 16 {
-            return PaymentCardType.notSupported
-        }
+//        if cardNumber.count < 15  || cardNumber.count > 16 {
+//            return PaymentCardType.notSupported
+//        }
 
         let predicateAmex = NSPredicate(format: "SELF MATCHES %@", REGEX_AMEX)
         if predicateAmex.evaluate(with: cardNumber) {
@@ -80,6 +80,7 @@ class GlobalHelper{
 
         let predicateVisa = NSPredicate(format: "SELF MATCHES %@", REGEX_VISA)
         if predicateVisa.evaluate(with: cardNumber) {
+            print("visaaaa")
             return PaymentCardType.visa
         }
 

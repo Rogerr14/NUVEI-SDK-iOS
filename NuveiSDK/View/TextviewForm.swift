@@ -47,11 +47,26 @@ public struct CustomTextField: View{
     }
     
     public var body: some View {
-        TextField(placeholder, text: $text)
-            .padding(EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 10))
-            .overlay( RoundedRectangle(cornerRadius: 20)
-                .stroke(lineWidth: 1))
-            .padding(.horizontal)
+        VStack{
+            
+            
+            TextField(placeholder, text: $text)
+                .padding(EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 10))
+                .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+                .overlay( RoundedRectangle(cornerRadius: cornerRadius)
+                          
+                    .stroke(showError ? Color.red : borderColor, lineWidth: 1,))
+                .onChange(of: text, initial: false) { oldValue, newValue in
+                    showError = !validation(newValue)
+                }
+            
+            if showError, let  errorMessage = errorMessage {
+                Text(errorMessage)
+                    .foregroundStyle(.red)
+                    .font(.caption)
+                
+            }
+        }
 //        VStack(alignment: .leading, spacing: 4) {
 //            Group {
 //                if isSecure {
@@ -88,7 +103,7 @@ struct CustomTextField_Previews: PreviewProvider {
     static var previews: some View {
         CustomTextField(
             text: .constant(""),
-            placeholder: "Card Number".localized,
+            placeholder: "Name of Cardholder".localized,
             validation: { $0.count >= 16 },
             errorMessage: "Invalid",
             backgroundColor: .white,

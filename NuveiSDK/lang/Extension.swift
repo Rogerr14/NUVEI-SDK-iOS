@@ -10,7 +10,6 @@
 import Foundation
 extension String {
     var localized: String {
-        let bundle = Bundle(identifier: "com.nuvei.NuveiSDK") ?? Bundle.main
-        return NSLocalizedString(self, tableName: nil, bundle: bundle, value: "", comment: "")
+        return NSLocalizedString(self, tableName: nil, bundle: Bundle(for: CardModel.self), value: "", comment: "")
     }
 }

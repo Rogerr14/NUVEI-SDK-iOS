@@ -63,11 +63,12 @@ public final class NuveiSdk {
             throw GeneralErrorModel.APIError(type: "Invalid configuration", help: "", description: "Request http not valid")
         }
         let token = GlobalHelper.generateAuthToken(key: shared.serverKey, code: shared.serverCode)
-        let bodyDict: [String: Any] = [
-                   "card": ["token": tokenCard],
-                   "user": ["id": uid]
-               ]
-               let bodyData = try JSONSerialization.data(withJSONObject: bodyDict)
+        let requestBody = DeleteCardRequest(
+            card: DeleteCardRequest.Card(token: tokenCard),
+            user: DeleteCardRequest.User(id: uid)
+        )
+        
+        let bodyData = try JSONEncoder().encode(requestBody)
         
         let response = try await interceptor.makeRequest(
             endpoint: "v2/card/delete/",

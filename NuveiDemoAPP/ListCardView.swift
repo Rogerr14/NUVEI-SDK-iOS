@@ -12,6 +12,8 @@
             @State var isLoading: Bool =  true
             @State var listCards: [CardModel] = []
             @State var errorMessage: String?
+            @State var isPresented: Bool = false
+            @State var messageAlert: String?
             
             @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
@@ -41,7 +43,15 @@
                                     Text(card.cardHolderName)
                                 }
                                 Spacer()
-                                Image(systemName: "trash")
+                                Button{
+                                    Task{
+                                        await deleteCard(tokenCard: card.token!)
+                                    }
+                                } label: {
+                                    Image(systemName: "trash")
+                                }
+
+//                                Image(systemName: "trash")
                             }
                             
                         }
@@ -75,6 +85,17 @@
                         LoadingView()
                     }
                 }}
+                .alert(isPresented: $isPresented, content: {
+                                Alert(
+                                    title: Text(messageAlert ?? "Acción completada"),
+                                    dismissButton: .default(Text("Aceptar")) {
+                                        // Recargar la lista de tarjetas al cerrar el alert
+                                        Task {
+                                            await loadListCards()
+                                        }
+                                    }
+                                )
+                            })
                 .onAppear{
                     Task{
                         await loadListCards()
@@ -97,9 +118,26 @@
                         
                         errorMessage = "Error inesperado: \(error)"
                     }
+                
                 print(errorMessage)
              
                 
+            }
+        
+            private func deleteCard(tokenCard: String) async{
+                isLoading = true
+                defer{isLoading = false}
+                do{
+                    let data = try await NuveiSdk.deleteCard(uid: "4", tokenCard: tokenCard)
+                    
+                    messageAlert = data
+                    
+                }catch let error as GeneralErrorModel{
+                    errorMessage = error.error.help
+                }catch{
+                    errorMessage = "Error: \(error)"
+                }
+                isPresented = true
             }
         }
 

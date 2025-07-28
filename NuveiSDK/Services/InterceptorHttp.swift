@@ -173,7 +173,7 @@ struct CardListContainer: Codable {
                     
                     
                     if let body = body {
-                        request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+                        request.httpBody = body
                     }
                 print(request.allHTTPHeaderFields ?? "")
                     return request
