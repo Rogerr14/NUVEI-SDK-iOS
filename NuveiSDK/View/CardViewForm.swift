@@ -26,24 +26,29 @@ struct CardViewForm: View {
             ZStack{
                 Rectangle().foregroundStyle(.gray.opacity(0.8))
                 ImageViewCustom(imagePath: GlobalHelper.getCardTypeAsset(cardType: cardtype)).position(CGPoint(x: 50, y: 40 ))
+                
                 VStack{
-                    
-                    
-                    Text("\(numberCard.isEmpty ? "**** **** **** *****": numberCard)")
-                    HStack{
-                        VStack{
-                            Text("Name of Cardholder".localized)
-                            Text("")
+                  Spacer()
+                    VStack{
+                        
+                        
+                        Text("\(numberCard.isEmpty ? "**** **** **** *****": numberCard)")
+                        HStack{
+                            VStack{
+                                Text("Name of Cardholder".localized)
+                                Text("Name Lastname".localized)
+                            }
+                            VStack{
+                                Text("Expiration (MM/YY)".localized)
+                                Text("MM/YY")
+                            }
                         }
-                        VStack{
-                            Text("Expiration (MM/YY)".localized)
-                            Text("")
-                        }
-                    }
+                    }.padding(20)
                 }
                 
             }.frame(width:.infinity, height: 250)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+            
             
             CustomTextField(text: $holderCard, placeholder: "Name of Cardholder", cornerRadius: 5)
             CustomTextField(text: $numberCard, placeholder: "Card Number").onChange(of: numberCard) { oldValue, newValue in
